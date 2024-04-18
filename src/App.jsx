@@ -1,35 +1,55 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useRef, useEffect } from "react";
+import TodoList from "./TodoList";
+
+const LOCAL_STORAGE_KEY = "todoApp.todos";
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [todos, setTodos] = useState([
+  ]);
+  const inputRef = useRef();
+
+  useEffect(()=> {
+    const storedTodos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+    if(storedTodos) setTodos(storedTodos);
+  }, [])
+
+  useEffect(()=>{
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos))
+  }, [todos])
+
+  function addTodo() {
+    if(inputRef.current.value==="") return;
+
+    const newTodo = {
+      id: (todos?.[todos.length -1]?.id ?? 0) +1,
+      name: inputRef.current.value,
+      completed: false
+    };
+    setTodos((prevTodos) => [...prevTodos, newTodo]);
+    inputRef.current.value = "";
+  }
+
+  function toogleTodo(id){
+    const newTodos = [...todos];
+    const todo = newTodos.find(todo=>todo.id === id);
+    todo.completed = !todo.completed
+    setTodos(newTodos)
+  }
+
+  function clearCompleted() {
+    const newTodos = todos.filter(todo=>!todo.completed)
+    setTodos(newTodos)
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <input type="text" ref={inputRef} />
+      <button onClick={addTodo}>Add</button>
+      <button onClick={clearCompleted}>Clear Completed</button>
+      <TodoList todos={todos} toogleTodo={toogleTodo}/>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
